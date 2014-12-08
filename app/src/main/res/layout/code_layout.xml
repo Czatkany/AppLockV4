@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:id="@+id/codeRelativeLayout"
+    >
+
+    <EditText
+        android:id="@+id/unBlockText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:inputType="number"
+        android:textColorHighlight="#fff7fffb"
+        android:textColor="#ffffffff" />
+
+    <Button
+        android:id="@+id/enterCode"
+        android:text="@string/enterCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/unBlockText"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/mid" />
+
+    <View
+        android:id="@+id/mid"
+        android:layout_centerInParent="true"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1" >
+    </View>
+
+    <Button
+        android:id="@+id/cancelCode"
+        android:text="@string/cancelCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/mid"
+        android:layout_below="@+id/unBlockText"
+        android:layout_alignParentRight="true"
+        />
+
+</RelativeLayout>
