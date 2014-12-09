@@ -20,7 +20,7 @@ public class AppLockerService extends Service {
     }
 
     //In the main function there is a handle.postDelayer loop which restarts in every 100 millisec by recalling itself
-    //The loop stops only, when the ForegrundApp find a selected app.
+    //The loop stops only, when the ForegroundApp finds a selected app.
     public int onStartCommand(Intent intent, int flags, int startId) {
         handler.postDelayed(new Runnable() {
             public void run() {
@@ -33,12 +33,10 @@ public class AppLockerService extends Service {
     }
 
     //This function checks the actual foreground app.
-    //If the function find matches between the selected app,
-    //and the foreground app, starts the code activity,
-    //and stops the handler loop, by returning 0.
-    //The applocker app is set as a default selected app.
-    //When the user restart the app, on the second launch
-    //it terminates the background services.
+    //If the foreground app matches one of the selected apps, the function
+    //starts the code activity and stops the handler loop, by returning 0.
+    //The applocker app is selected by default.
+    //When the user restarts the beforehand locked app after imputing the right code, the background service is terminated.
     public int ForegroundApp() {
         loadArray();
         ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -70,7 +68,7 @@ public class AppLockerService extends Service {
         return 1;
     }
 
-    //This function loads back the saved applist
+    //This function refreshes applist by reloading it from the shared preferences file.
     public void loadArray() {
         SharedPreferences settings = getSharedPreferences("SavedAppList", 0);
         packageNames.clear();

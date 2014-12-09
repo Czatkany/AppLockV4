@@ -30,8 +30,8 @@ public class CodeWindowActivity extends Activity {
         OnClickCancel();
     }
 
-    //When a selected application launched, this activity pop up, and ask for the code.
-    //If the user give the right code, the selected app starts, and also a background service.
+    //When a selected application is launched, this activity pops up, and asks for the code.
+    //If the user gives the right code, the selected app starts as well as a background service.
     public void OnClickCode() {
         codeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -69,8 +69,8 @@ public class CodeWindowActivity extends Activity {
         });
     }
 
-    //If the ForegroundApp() finds a match, sends the applications packagename through an intent
-    //This function gets that packagename from the intent.
+    //If the ForegroundApp() finds a match, it sends the found application's packagename
+    //through an intent to this function
     public String FoundApp() {
         String selectedApp;
         Intent intent = getIntent();
@@ -78,7 +78,7 @@ public class CodeWindowActivity extends Activity {
         return selectedApp;
     }
 
-    //This function gets the user defined code
+    //This function gets the user defined code from the saved file.
     public String GetCode() {
         StringBuilder data = new StringBuilder("");
         try {

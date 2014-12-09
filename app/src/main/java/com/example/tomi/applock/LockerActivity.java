@@ -58,7 +58,7 @@ public class LockerActivity extends Activity {
         apps.setAdapter(adapter);
     }
 
-    //This function build the view from the xml-s.
+    //This function builds the view from the xml-s.
     private void buildView(int resource) {
         RelativeLayout my_root = (RelativeLayout) findViewById(R.id.root_Layout);
         LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -68,7 +68,7 @@ public class LockerActivity extends Activity {
         my_root.addView(A);
     }
 
-    //This function gets the installed packages
+    //This function gets the installed packages and populates the checkbox list
     private void getPackages() {
         PackageManager packageManager = getPackageManager();
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
@@ -89,8 +89,8 @@ public class LockerActivity extends Activity {
         }
     }
 
-    //This function set the ok buttons events.
-    //If the code set, and the apps are selected, it starts the app locker service.
+    //This function sets the ok button event.
+    //If the code is set, and the apps are selected, it starts the app locker service.
     private void okButtonListener() {
         okButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -131,9 +131,9 @@ public class LockerActivity extends Activity {
         });
     }
 
-    //This function set the code buttons events
-    //When the application started, the user have to set the code first
-    //The code button builds a dialoge box, where the user can set the code.
+    //This function sets the code button event
+    //When the application is started, the user have to set the code first
+    //The code button builds a dialogue box, where the user can input the code.
     private void codeButtonListener() {
         codeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -171,9 +171,9 @@ public class LockerActivity extends Activity {
         });
     }
 
-    //This function set the exit buttons events.
+    //This function sets the exit button event.
     //The app locker service runs in the background
-    //until the user restart the app, and shut it down by pressing this button.
+    //until the user restart the app, and shuts it down by pressing this button.
     private void exitButtonListener() {
         exitButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -188,14 +188,15 @@ public class LockerActivity extends Activity {
         return true;
     }
 
-    //This function handle the list elements events(check, uncheck)
+    //This function handles the list elements event(check, uncheck)
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
-    //When the applications are selected, before the app lock service starts,
-    //get the applist from the applistadapter and saves it for later use.
+    //When the applications are selected,
+    //the list of those applications (retrieved from the applistadapter)
+    //is saved to a file before the app lock service starts.
     public boolean saveArray() {
         selectedApps = adapter.getSelectedApps();
         String PrefFileName = "SavedAppList";
@@ -209,7 +210,7 @@ public class LockerActivity extends Activity {
         return mEdit1.commit();
     }
 
-    //This function saves the code.
+    //This function saves the code to a file.
     public void saveCode(String codeS) {
         String filename = "codeFile.txt";
         FileOutputStream outputStream;

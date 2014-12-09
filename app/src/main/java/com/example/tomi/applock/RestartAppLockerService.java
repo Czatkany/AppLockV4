@@ -17,8 +17,8 @@ public class RestartAppLockerService extends Service {
     public RestartAppLockerService() {
     }
 
-    //This service starts, when the selected app starts, and run until the user goes back to the home screen.
-    //When the user leave the app, it restarts the applocker service
+    //This service starts, when the selected app starts, and runs until the user goes back to the home screen.
+    //When the user leaves the app, it restarts the applocker service
     public int onStartCommand(Intent intent, int flags, int startId) {
         Runnable runnable;
         handler.postDelayed(runnable = new Runnable() {
