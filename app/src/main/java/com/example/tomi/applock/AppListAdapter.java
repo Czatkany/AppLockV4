@@ -1,7 +1,6 @@
 package com.example.tomi.applock;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,30 +11,11 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import android.content.Context;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityEvent;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.RadioGroup;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-
-/**
- * Created by Tomi on 2014.11.24..
- */
 public class AppListAdapter extends ArrayAdapter<String> {
 
     private ArrayList<String> appList;
     private ArrayList<String> packList;
     private ArrayList<CheckBox> checkList;
-    private ArrayList<CheckBox> checked;
     private ArrayList<String> selectedAppList;
 
     public AppListAdapter(Context context, int textViewResourceId,
@@ -50,48 +30,34 @@ public class AppListAdapter extends ArrayAdapter<String> {
         this.packList.addAll(packName);
     }
 
-    private class ViewHolder {
-        TextView label;
-        CheckBox name;
-
-    }
-
     public View getView(final int position, View convertView, ViewGroup parent) {
 
-        ViewHolder holder = null;
-        Log.v("ConvertView", String.valueOf(position));
+        ViewHolder holder;
         if (convertView == null) {
-            LayoutInflater vi = (LayoutInflater) getContext().getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = vi.inflate(R.layout.app_list, null);
             holder = new ViewHolder();
             holder.label = (TextView) convertView.findViewById(R.id.AppLabel);
             holder.name = (CheckBox) convertView.findViewById(R.id.CheckBox);
             convertView.setTag(holder);
-
             holder.name.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     CheckBox cb = (CheckBox) v;
-                    String app = (String) cb.getTag();
-                    if(cb.isChecked() == true)
-                    {
+                    if (cb.isChecked()) {
                         Toast.makeText(getContext().getApplicationContext(),
-                                "Clicked on Checkbox: " + cb.getText() +
+                                cb.getText() +
                                         " is " + cb.isChecked(),
                                 Toast.LENGTH_LONG).show();
                         cb.setSelected(cb.isChecked());
                         selectedAppList.add(packList.get(position));
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(getContext().getApplicationContext(),
-                                "Clicked on Checkbox: " + cb.getText() +
+                                cb.getText() +
                                         " is " + cb.isChecked(),
                                 Toast.LENGTH_LONG).show();
                         cb.setSelected(cb.isChecked());
                         selectedAppList.remove(packList.get(position));
                     }
-
                 }
             });
 
@@ -103,10 +69,15 @@ public class AppListAdapter extends ArrayAdapter<String> {
         holder.name.setText(app);
         holder.name.setVisibility(View.VISIBLE);
         holder.name.setChecked(cb.isChecked());
-
         return convertView;
-
     }
 
-    ArrayList<String> getSelectedApps(){ return selectedAppList; }
+    ArrayList<String> getSelectedApps() {
+        return selectedAppList;
+    }
+
+    private class ViewHolder {
+        TextView label;
+        CheckBox name;
+    }
 }

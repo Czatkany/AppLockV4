@@ -1,7 +1,6 @@
 package com.example.tomi.applock;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -23,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,66 +33,54 @@ public class LockerActivity extends Activity {
     private ArrayList<String> packName = new ArrayList<String>();
     private ArrayList<CheckBox> checkList = new ArrayList<CheckBox>();
     private ArrayList<String> selectedApps = new ArrayList<String>();
-    private ListView Apps;
-    private CheckBox Check;
     private Button okButton;
     private Button codeButton;
     private Button exitButton;
-    private String code = new String();
-    private boolean codeSetted = false;
-    private EditText editText;
+    private String code;
+    private boolean codeSetted;
     private Context context = LockerActivity.this;
     private AppListAdapter adapter;
 
-
-
     protected void onCreate(Bundle savedInstanceState) {
-        code = "0000";
-        SaveCode(code);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.root_layout);
         buildView(R.layout.app_list);
         buildView(R.layout.activity_locker);
-        Apps = (ListView) findViewById(R.id.AppList);
-        Check = (CheckBox) findViewById(R.id.CheckBox);
+        ListView apps = (ListView) findViewById(R.id.AppList);
         okButton = (Button) findViewById(R.id.OK);
         codeButton = (Button) findViewById(R.id.ChangeCode);
         exitButton = (Button) findViewById(R.id.Exit);
         getPackages();
-        okButtonListener(codeSetted);
+        okButtonListener();
         codeButtonListener();
         exitButtonListener();
         adapter = new AppListAdapter(context, android.R.layout.simple_list_item_1, appName, checkList, packName);
-        Apps.setAdapter(adapter);
+        apps.setAdapter(adapter);
     }
 
-
-
-
-    private void buildView(int resource) //This function build the view from the xml-s
-    {
+    //This function build the view from the xml-s.
+    private void buildView(int resource) {
         RelativeLayout my_root = (RelativeLayout) findViewById(R.id.root_Layout);
-        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(getBaseContext().LAYOUT_INFLATER_SERVICE);
+        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View v = vi.inflate(resource, null);
         RelativeLayout A = new RelativeLayout(this);
         A.addView(v);
         my_root.addView(A);
     }
-    private void getPackages() //This function gets the installed packages
-    {
+
+    //This function gets the installed packages
+    private void getPackages() {
         PackageManager packageManager = getPackageManager();
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> appList = packageManager.queryIntentActivities(mainIntent, 0);
         Collections.sort(appList, new ResolveInfo.DisplayNameComparator(packageManager));
         List<PackageInfo> packs = packageManager.getInstalledPackages(0);
-        for(int i=0; i < packs.size(); i++) {
-            PackageInfo p = packs.get(i);
+        for (PackageInfo p : packs) {
             ApplicationInfo a = p.applicationInfo;
             String name = packageManager.getApplicationLabel(a).toString();
             // skip system apps if they shall not be included
-            if((a.flags & ApplicationInfo.FLAG_SYSTEM) == 1 || name.matches("AppLockV4"))
-            {
+            if ((a.flags & ApplicationInfo.FLAG_SYSTEM) == 1 || name.matches("AppLockV4")) {
                 continue;
             }
             packName.add(p.packageName);
@@ -100,158 +88,138 @@ public class LockerActivity extends Activity {
             checkList.add(new CheckBox(getBaseContext()));
         }
     }
-    private void okButtonListener(final boolean codeSetted) //This function set the ok buttons events
-    {
+
+    //This function set the ok buttons events.
+    //If the code set, and the apps are selected, it starts the app locker service.
+    private void okButtonListener() {
         okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
             public void onClick(View v) {
-              /*  if(codeSetted == false)
-                {
+                if (!codeSetted) {
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LockerActivity.this, 4);
                     alertDialogBuilder.setTitle(R.string.dialog_title);
                     alertDialogBuilder.setMessage(R.string.dialog_message);
                     alertDialogBuilder.setCancelable(false);
-                    alertDialogBuilder.setPositiveButton("Ok",new DialogInterface.OnClickListener() {
-                        @Override
+                    alertDialogBuilder.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
                     });
                     AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();*/
+                    alertDialog.show();
+                } else {
+                    saveArray();
+                    if (selectedApps.size() > 0) {
+                        startService(new Intent(AppLockerService.TAG));
+                        finish();
+                    } else {
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LockerActivity.this, 4);
+                        alertDialogBuilder.setTitle(R.string.dialog_title);
+                        alertDialogBuilder.setMessage(R.string.dialog_message2);
+                        alertDialogBuilder.setCancelable(false);
+                        alertDialogBuilder.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        AlertDialog alertDialog = alertDialogBuilder.create();
+                        alertDialog.show();
+                    }
 
-                saveArray();
-                startService(new Intent(AppLockerService.TAG));
-                finish();
 
-                //    }
+                }
             }
         });
     }
-    private void codeButtonListener() //This function set the code buttons events
-    {
-        codeButton.setOnClickListener(new View.OnClickListener() {////http://stackoverflow.com/questions/24969380/android-edittext-nullpointerexception
-            @Override
-            public void onClick(View v) {
 
+    //This function set the code buttons events
+    //When the application started, the user have to set the code first
+    //The code button builds a dialoge box, where the user can set the code.
+    private void codeButtonListener() {
+        codeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(LockerActivity.this, 4);
-                // Get the layout inflater
                 LayoutInflater inflater = LockerActivity.this.getLayoutInflater();
                 final View layout = inflater.inflate(R.layout.input_window, null);
-                // Inflate and set the layout for the dialog
-                // Pass null as the parent view because its going in the dialog layout
                 builder.setView(layout);
-                builder.setTitle("Kód megadása");
-                builder.setPositiveButton("Beállít", new DialogInterface.OnClickListener() {
-                    @Override
+                builder.setTitle(R.string.dialog_title2);
+                builder.setNegativeButton(R.string.enterCode, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         EditText editText = (EditText) layout.findViewById(R.id.editCodeText);
-                        String emptyText = "";
-                        emptyText = editText.getText().toString().trim();
-                        if (emptyText.isEmpty() || emptyText.length() == 0 || emptyText.equals("") || emptyText == null) {
-                            Toast.makeText(context, "Nincs érték!", Toast.LENGTH_SHORT).show();
+                        String emptyText = editText.getText().toString().trim();
+                        if (emptyText.length() == 0) {
+                            Toast.makeText(context, R.string.dialog_message, Toast.LENGTH_SHORT).show();
                         } else {
                             if (editText.getText().toString().length() == 4) {
                                 code = editText.getText().toString();
-                                SaveCode(code);
-                                //codeSetted = true;
-                                Toast.makeText(context, "Érték beállítva!", Toast.LENGTH_SHORT).show();
+                                saveCode(code);
+                                codeSetted = true;
+                                Toast.makeText(context, R.string.code_setted, Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(context, "Nem megfelelő a hossz!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, R.string.code_lenght_error, Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
                 });
-
-                builder.setNegativeButton("Mégse", new DialogInterface.OnClickListener() {
-                    @Override
+                builder.setPositiveButton(R.string.cancelCode, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
                 });
-
                 Dialog editTextDialog = builder.create();
                 editTextDialog.show();
-
-
             }
         });
     }
-    private void exitButtonListener() //This function set the exit buttons events
-    {
-        exitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
+    //This function set the exit buttons events.
+    //The app locker service runs in the background
+    //until the user restart the app, and shut it down by pressing this button.
+    private void exitButtonListener() {
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
                 Intent i = new Intent(LockerActivity.this, AppLockerService.class);
                 LockerActivity.this.stopService(i);
-
                 System.exit(0);
-                //finish();
             }
         });
     }
-    private void CurrentAppFinder()
-    {
-        ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> RunningTask = mActivityManager.getRunningTasks(1);
-        ActivityManager.RunningTaskInfo ar = RunningTask.get(0);
-        // activityOnTop = ar.topActivity.getClassName();
-    }
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.locker, menu);
         return true;
     }
 
-
+    //This function handle the list elements events(check, uncheck)
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
-    public boolean saveArray()
-    {
+    //When the applications are selected, before the app lock service starts,
+    //get the applist from the applistadapter and saves it for later use.
+    public boolean saveArray() {
         selectedApps = adapter.getSelectedApps();
-
-        String PrefFileName = "MyPrefFile";
+        String PrefFileName = "SavedAppList";
         SharedPreferences sp = getSharedPreferences(PrefFileName, 0);
-
         SharedPreferences.Editor mEdit1 = sp.edit();
-        mEdit1.putInt("Status_size", selectedApps.size()); /* sKey is an array */
-
-        for(int i=0;i<selectedApps.size();i++)
-        {
+        mEdit1.putInt("Status_size", selectedApps.size());
+        for (int i = 0; i < selectedApps.size(); i++) {
             mEdit1.remove("Status_" + i);
             mEdit1.putString("Status_" + i, selectedApps.get(i));
         }
-
         return mEdit1.commit();
     }
 
-    public void SaveCode(String codeS)
-    {
+    //This function saves the code.
+    public void saveCode(String codeS) {
         String filename = "codeFile.txt";
-        String string = codeS;
         FileOutputStream outputStream;
-
         try {
             outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(string.getBytes());
+            outputStream.write(codeS.getBytes());
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
-
-
 }
 

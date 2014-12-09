@@ -1,12 +1,9 @@
 package com.example.tomi.applock;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,137 +13,89 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 
-/**
- * Created by Tomi on 2014.12.08..
- */
 public class CodeWindowActivity extends Activity {
 
+    private String currentApp;
     private Button codeButton;
     private Button cancelButton;
-    private EditText codeText;
-    private String code = new String();
-    private String currentApp = new String();
-    private ArrayList<String> listedApps = new ArrayList<String>();
 
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        stopService(new Intent(AppLockerService.TAG));
         setContentView(R.layout.code_layout);
-        ;
+        currentApp = FoundApp();
         codeButton = (Button) findViewById(R.id.enterCode);
         cancelButton = (Button) findViewById(R.id.cancelCode);
-        codeText = (EditText) findViewById(R.id.editCodeText);
-        code = GetCode();
-        loadArray(this, listedApps);
-        HandlerWinIntent();
-        Toast.makeText(this, code, Toast.LENGTH_SHORT).show();
-
-        codeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.w("WW", "1");
-                //processStopService(HandlerWin.TAG);
-                // stopService(new Intent(HandlerWin.TAG));
-                Log.w("WW", "2");
-                /*Intent lockIntent = new Intent(getBaseContext(), currentApp);
-                lockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                CodeActivity.this.startActivity();*/
-
-                Log.w("WW","3");
-                PackageManager pmi = getPackageManager();
-                Intent intent = null;
-                Log.w("WW","4");
-                intent = pmi.getLaunchIntentForPackage("com.estoty.game2048");
-                if (intent != null){
-                    Log.w("WW","5");
-                    startActivity(intent);
-                }
-
-                finish();
-            }
-        });
-
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-
-                finish();
-
-            }
-        });
-
+        OnClickCode();
+        OnClickCancel();
     }
 
-    public String HandlerWinIntent()
-    {
-        String selectedApp = new String();
+    //When a selected application launched, this activity pop up, and ask for the code.
+    //If the user give the right code, the selected app starts, and also a background service.
+    public void OnClickCode() {
+        codeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final String code = GetCode();
+                final EditText codeText = (EditText) findViewById(R.id.unBlockText);
+                String text = codeText.getText().toString();
+                if (text.length() > 0) {
+                    if (text.matches(code)) {
+                        PackageManager pmi = getPackageManager();
+                        Intent intent;
+                        intent = pmi.getLaunchIntentForPackage(currentApp);
+                        if (intent != null) {
+                            startActivity(intent);
+                            startService(new Intent(CodeWindowActivity.this, RestartAppLockerService.class));
+                        }
+                        finish();
+
+                    } else {
+                        Toast.makeText(getBaseContext(), R.string.not_matches, Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getBaseContext(), R.string.empty, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    //Cancel button
+    public void OnClickCancel() {
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startService(new Intent(CodeWindowActivity.this, AppLockerService.class));
+                finish();
+            }
+        });
+    }
+
+    //If the ForegroundApp() finds a match, sends the applications packagename through an intent
+    //This function gets that packagename from the intent.
+    public String FoundApp() {
+        String selectedApp;
         Intent intent = getIntent();
-
-
-
         selectedApp = intent.getStringExtra("foundApp");
         return selectedApp;
     }
 
-    private void processStopService(final String tag) {
-        Intent intent = new Intent(getBaseContext(), AppLockerService.class);
-        intent.addCategory(tag);
-        stopService(intent);
-    }
-
-    public String GetCode()
-    {
-        StringBuffer datax = new StringBuffer("");
+    //This function gets the user defined code
+    public String GetCode() {
+        StringBuilder data = new StringBuilder("");
         try {
             FileInputStream fIn = openFileInput ( "codeFile.txt" ) ;
             InputStreamReader isr = new InputStreamReader ( fIn ) ;
-            BufferedReader buffreader = new BufferedReader ( isr ) ;
+            BufferedReader buffReader = new BufferedReader(isr);
 
-            String readString = buffreader.readLine ( ) ;
+            String readString = buffReader.readLine();
             while ( readString != null ) {
-                datax.append(readString);
-                readString = buffreader.readLine ( ) ;
+                data.append(readString);
+                readString = buffReader.readLine();
             }
 
             isr.close ( ) ;
         } catch ( IOException ioe ) {
             ioe.printStackTrace ( ) ;
         }
-        return datax.toString() ;
+        return data.toString();
     }
-
-    public void saveArray(ArrayList<String> selectedApps)
-    {
-
-        String PrefFileName = "MyPrefFile";
-        SharedPreferences sp = getSharedPreferences(PrefFileName, 0);
-
-        SharedPreferences.Editor mEdit1 = sp.edit();
-        mEdit1.putInt("Status_size", selectedApps.size()); /* sKey is an array */
-
-        for(int i=0;i<selectedApps.size();i++)
-        {
-            mEdit1.remove("Status_" + i);
-            mEdit1.putString("Status_" + i, selectedApps.get(i));
-        }
-
-        mEdit1.apply();
-    }
-
-    public void loadArray(Context mContext, ArrayList<String> packageNames)
-    {
-        SharedPreferences settings = getSharedPreferences("MyPrefFile", 0);
-        packageNames.clear();
-        int size = settings.getInt("Status_size", 0);
-
-        for(int i=0;i<size;i++)
-        {
-            packageNames.add(settings.getString("Status_" + i, null));
-        }
-    }
-
 }

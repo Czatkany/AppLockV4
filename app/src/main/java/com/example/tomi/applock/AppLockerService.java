@@ -7,30 +7,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Tomi on 2014.12.08..
- */
 public class AppLockerService extends Service {
-    private ArrayList<String> packageNames = new ArrayList<String>();
-    private final Handler handler = new Handler();
-    private Runnable runnable;
     public static final String TAG = "com.example.tomi.applock.AppLockerService";
-
+    private final Handler handler = new Handler();
+    private ArrayList<String> packageNames = new ArrayList<String>();
+    private int firstRun = 0;
     public AppLockerService() {
     }
 
-    @Override
-    public int onStartCommand(final Intent intent, int flags, int startId) {
-        handler.postDelayed(runnable = new Runnable() {
-            @Override
+    //In the main function there is a handle.postDelayer loop which restarts in every 100 millisec by recalling itself
+    //The loop stops only, when the ForegrundApp find a selected app.
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        handler.postDelayed(new Runnable() {
             public void run() {
-                if(ForegroundApp() == 1)
-                {
+                if (ForegroundApp() == 1) {
                     handler.postDelayed(this, 100);
                 }
             }
@@ -38,57 +32,54 @@ public class AppLockerService extends Service {
         return 1;
     }
 
-    public void Stop()
-    {
-        stopSelf();
-    }
-
-    public int ForegroundApp()
-    {
-        loadArray(this);
+    //This function checks the actual foreground app.
+    //If the function find matches between the selected app,
+    //and the foreground app, starts the code activity,
+    //and stops the handler loop, by returning 0.
+    //The applocker app is set as a default selected app.
+    //When the user restart the app, on the second launch
+    //it terminates the background services.
+    public int ForegroundApp() {
+        loadArray();
         ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningTaskInfo> RunningTask = mActivityManager.getRunningTasks(1);
         ActivityManager.RunningTaskInfo ar = RunningTask.get(0);
         String activityOnTop = ar.topActivity.getPackageName();
-        Log.w("WTFF", "ciklus elott");
         if (activityOnTop.length() > 0) {
             for (String s : packageNames) {
-                Log.w("WTFF", s);
-                Log.w("WTFF", activityOnTop);
                 if (s.matches(activityOnTop)) {
-                    Log.w("WTFF", "win is here");
-
                     Intent startHomeScreen=new Intent(Intent.ACTION_MAIN);
                     startHomeScreen.addCategory(Intent.CATEGORY_HOME);
                     startHomeScreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(startHomeScreen);
-
                     Intent i = new Intent();
                     i.setClass(this, CodeWindowActivity.class);
                     i.putExtra("foundApp",s);
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(i);
-                    Log.w("STOP","Megallo1");
+                    firstRun = 0;
+                    return 1;
+                }
+                if (activityOnTop.matches("com.example.tomi.applock") && firstRun >= 4) {
+                    firstRun = 0;
                     return 0;
                 }
             }
         }
+        firstRun++;
         return 1;
     }
 
-    public void loadArray(Context mContext)
-    {
-        SharedPreferences settings = getSharedPreferences("MyPrefFile", 0);
+    //This function loads back the saved applist
+    public void loadArray() {
+        SharedPreferences settings = getSharedPreferences("SavedAppList", 0);
         packageNames.clear();
         int size = settings.getInt("Status_size", 0);
-
         for(int i=0;i<size;i++)
         {
             packageNames.add(settings.getString("Status_" + i, null));
         }
     }
-
-    @Override
     public IBinder onBind(Intent intent) {
         return null;
     }

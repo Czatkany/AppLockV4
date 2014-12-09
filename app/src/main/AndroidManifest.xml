@@ -18,16 +18,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".CodeWindowActivity"
+            android:label="@string/app_name2"
+            android:theme="@android:style/Theme.Holo.Dialog"></activity>
+
         <service android:name=".AppLockerService"
             android:enabled="true">
             <intent-filter >
-                <action android:name="com.example.tomi.applockv3.HandlerWin"/>
+                <action android:name="com.example.tomi.applock.AppLockerService" />
             </intent-filter>
         </service>
         <service android:name=".RestartAppLockerService"
             android:enabled="true">
             <intent-filter >
-                <action android:name="com.example.tomi.applockv3.HandlerWin"/>
+                <action android:name="com.example.tomi.applock.RestartAppLockerService" />
             </intent-filter>
         </service>
     </application>
